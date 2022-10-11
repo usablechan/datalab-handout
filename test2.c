@@ -1,7 +1,5 @@
 int main(){
-    int a=0x08765432;
-    printf("%d\n",a);
-    printf("%d",logicalShift(0x87654321,4));
+  printf("%d",addOK(0x80000000,0x80000000));
 }
 
 int bitAnd(int x, int y) {
@@ -22,7 +20,6 @@ int logicalShift(int x, int n) {
   return ~((~0 << (32 + ~n)) <<1) & x >> n ;
 }
 
-
 // int logicalNeg(int x) {
 //   x= x | x>>16;
 //   x= x | x>>8;
@@ -33,4 +30,30 @@ int logicalShift(int x, int n) {
 
 int logicalNeg(int x) {
     return ((x|(~x+1))>>31)+1;
+}
+
+int tmax(void) {
+  return ~(1<<31);
+}
+
+int isPositive(int x) {
+  return !(1<<31 & x) ^ !x;
+}
+
+int sign(int x) {
+    return x>>31 | !!x;
+}
+
+// int addOK(int x, int y) {
+//   return !!(x>>31 ^ y>>31) | (x>>31&y>>31) & (x+y)>>31;
+// }
+
+int addOK(int x, int y) {
+  int a=x+y;
+  return !((a ^ x) & (a ^ y))>> 31;
+}
+
+
+int isGreater(int x, int y) {
+  return x+(~y+1);
 }
