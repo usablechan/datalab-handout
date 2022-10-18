@@ -1,5 +1,13 @@
+unsigned floatAbsVal(unsigned uf) {
+  unsigned exp=uf>>23&0xFF;
+  unsigned frac=uf<<9;
+  if((( exp^0xff ) | !frac))
+    return ~(1<<31) & uf;
+  return uf;
+}
+
 int main(){
-  printf("%d",addOK(0x80000000,0x80000000));
+  printf("%d",floatIsEqual(0x7f800000,0x7f800000));
 }
 
 int bitAnd(int x, int y) {
@@ -50,10 +58,46 @@ int sign(int x) {
 
 int addOK(int x, int y) {
   int a=x+y;
-  return !((a ^ x) & (a ^ y))>> 31;
+  return !(((a ^ x) & (a ^ y))>> 31);
 }
 
 
 int isGreater(int x, int y) {
-  return x+(~y+1);
+  int a=x>>31;
+  int b=y>>31;
+  int c=a^b;
+  return !!((c&b) | (!c & ((y+(~x+1))>>31))) ;
+}
+
+
+int floatFloat2Int(unsigned uf) {
+  int exp=((~(1<<31)) & uf) >>23;
+  int e=exp-150;
+  int sign=!(uf>>31);
+  int frac=!((-1)<<23) & uf;
+  int m=1<<23+frac;
+  int result;
+  if (e>7)
+    return 0x80000000u;
+  else if (e<-23)
+    return 0;
+  else if(e>=0)
+    result=m<<e;
+  else
+    result=m>>-e;
+  if (sign ==1)
+    return result;
+  return -result;
+}
+
+int floatIsEqual(unsigned uf, unsigned ug) {
+  unsigned exp=uf>>23&0xFF;
+  unsigned frac=uf<<9;
+  unsigned exp2=uf>>23&0xFF;
+  unsigned frac2=uf<<9;
+  if(!((( exp^0xff ) | !frac) | (( exp2^0xff ) | !frac2)))
+    return 0;
+  else if( uf==0 && (uf<<1)^(ug<<1)==0 )
+    return 1;
+  return !(uf^ug);
 }

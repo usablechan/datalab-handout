@@ -272,7 +272,9 @@ int sign(int x) {
  *   Rating: 3
  */
 int addOK(int x, int y) {
-  return 2;
+  int a=x>>31;
+  int b=y>>31;
+  return !!(a ^ b) | (a&b) & (x+y)>>31;
 }
 /* 
  * isGreater - if x > y  then return 1, else return 0 
@@ -282,7 +284,10 @@ int addOK(int x, int y) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-  return 2;
+  int a=x>>31;
+  int b=y>>31;
+  int c=a^b;
+  return !!((c&b) | (!c & ((y+(~x+1))>>31))) ;
 }
 /* 
  * floatAbsVal - Return bit-level equivalent of absolute value of f for
@@ -296,7 +301,11 @@ int isGreater(int x, int y) {
  *   Rating: 2
  */
 unsigned floatAbsVal(unsigned uf) {
-  return 2;
+  unsigned exp=uf>>23&0xFF;
+  unsigned frac=uf<<9;
+  if((( exp^0xff ) | !frac))
+    return ~(1<<31) & uf;
+  return uf;
 }
 /* 
  * floatIsEqual - Compute f == g for floating point arguments f and g.
@@ -304,13 +313,21 @@ unsigned floatAbsVal(unsigned uf) {
  *   they are to be interpreted as the bit-level representations of
  *   single-precision floating point values.
  *   If either argument is NaN, return 0.
- *   +0 and -0 are considered equal.
+ *   +0 and -0 are considered equal. 
  *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
  *   Max ops: 25
  *   Rating: 2
  */
 int floatIsEqual(unsigned uf, unsigned ug) {
-    return 2;
+  unsigned exp=uf>>23&0xFF;
+  unsigned frac=uf<<9;
+  unsigned exp2=uf>>23&0xFF;
+  unsigned frac2=uf<<9;
+  if(!((( exp^0xff ) | !frac) | (( exp2^0xff ) | !frac2)))
+    return 0;
+  else if( uf==0 && (uf<<1)^(ug<<1)==0 )
+    return 1;
+  return !(uf^ug);
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -325,5 +342,21 @@ int floatIsEqual(unsigned uf, unsigned ug) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  int exp=((~(1<<31)) & uf) >>23;
+  int e=exp-150;
+  int sign=!(uf>>31);
+  int frac=!((-1)<<23) & uf;
+  int m=1<<23+frac;
+  int result;
+  if (e>7)
+    return 0x80000000u;
+  else if (e<-23)
+    return 0;
+  else if(e>=0)
+    result=m<<e;
+  else
+    result=m>>-e;
+  if (sign ==1)
+    return result;
+  return -result;
 }
